@@ -1,7 +1,6 @@
 ThreadPool
 ==========
-
-A simple C++11 Thread Pool implementation.
+一个C++17实现的线程池，C++11版本见Fork原项目
 
 Basic usage:
 ```c++
