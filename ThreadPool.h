@@ -18,10 +18,10 @@ public:
 	ThreadPool(size_t size);
 	~ThreadPool();
 	template<class F, typename ... Args>
-	decltype(auto) Enqueue(F&&, Args&& ... args); //Í¨¹ıÍêÃÀ×ª·¢½øĞĞÈÎÎñÈë¶ÓÁĞ
+	decltype(auto) Enqueue(F&&, Args&& ... args); //é€šè¿‡å®Œç¾è½¬å‘è¿›è¡Œä»»åŠ¡å…¥é˜Ÿåˆ—
 private:
-	std::vector<std::thread> workers; //ÓÃÀ´¹¤×÷µÄÏß³Ì
-	std::queue<std::function<void()>> tasks; //Ïß³Ì³ØµÄÈÎÎñ¶ÓÁĞ
+	std::vector<std::thread> workers; //ç”¨æ¥å·¥ä½œçš„çº¿ç¨‹
+	std::queue<std::function<void()>> tasks; //çº¿ç¨‹æ± çš„ä»»åŠ¡é˜Ÿåˆ—
 	std::condition_variable cond_; 
 	std::mutex mutex_; 
 	bool stop;
@@ -33,25 +33,25 @@ inline ThreadPool::ThreadPool(size_t size) :stop(false)
 	{
 		workers.emplace_back([this]()
 		{
-			while (true) //ËÀÑ­»·µÈ´ı
+			while (true) //æ­»å¾ªç¯ç­‰å¾…
 			{
 				std::function<void()> task;
 				{   
-					//ÁÙ½çÇø¿ªÊ¼ µÈ´ıÏß³Ì³ØµÄÏú»Ù»òÕßÊÇÈÎÎñµÄ´øÀ´
+					//ä¸´ç•ŒåŒºå¼€å§‹ ç­‰å¾…çº¿ç¨‹æ± çš„é”€æ¯æˆ–è€…æ˜¯ä»»åŠ¡çš„å¸¦æ¥
 					std::unique_lock<std::mutex> lock(mutex_);
-					cond_.wait(lock, [this] { return this->stop || !this->tasks.empty(); }); //Ìõ¼ş±äÁ¿µÄwaitº¯Êı ·ÀÖ¹Ğé¼Ù»½ĞÑ
+					cond_.wait(lock, [this] { return this->stop || !this->tasks.empty(); }); //æ¡ä»¶å˜é‡çš„waitå‡½æ•° é˜²æ­¢è™šå‡å”¤é†’
 
 					if (this->stop && this->tasks.empty())
 					{
-						return; //Ïß³Ì³ØÏú»Ù Ìø³öÑ­»·
+						return; //çº¿ç¨‹æ± é”€æ¯ è·³å‡ºå¾ªç¯
 					}
 
-					task = std::move(this->tasks.front()); //½«¶ÓÁĞµÄÍ·²¿ÒÆ¶¯¸øtask
-					this->tasks.pop(); //¼ÇµÃ³ö¶ÓÁĞ
+					task = std::move(this->tasks.front()); //å°†é˜Ÿåˆ—çš„å¤´éƒ¨ç§»åŠ¨ç»™task
+					this->tasks.pop(); //è®°å¾—å‡ºé˜Ÿåˆ—
 					
-					//ÁÙ½çÇø½áÊø ×Ô¶¯ÊÍ·ÅËø mutex_
+					//ä¸´ç•ŒåŒºç»“æŸ è‡ªåŠ¨é‡Šæ”¾é” mutex_
 				}
-				task(); //Ö´ĞĞÈÎÎñ
+				task(); //æ‰§è¡Œä»»åŠ¡
 			}
 		});
 	}
@@ -60,38 +60,38 @@ inline ThreadPool::ThreadPool(size_t size) :stop(false)
 inline ThreadPool::~ThreadPool()
 {
 	{
-		//ÁÙ½çÇø¿ªÊ¼  Ëø×¡stop ½«Æä¸³ÖµÎªtrue Í¨ÖªÏß³ÌÍË³öÑ­»·
+		//ä¸´ç•ŒåŒºå¼€å§‹  é”ä½stop å°†å…¶èµ‹å€¼ä¸ºtrue é€šçŸ¥çº¿ç¨‹é€€å‡ºå¾ªç¯
 		std::unique_lock<std::mutex> lock(mutex_);
 		stop = true;
-		//ÁÙ½çÇø½áÊø ×Ô¶¯ÊÍ·ÅËø mutex_
+		//ä¸´ç•ŒåŒºç»“æŸ è‡ªåŠ¨é‡Šæ”¾é” mutex_
 	}
-	cond_.notify_all();//Í¨ÖªËùÓĞµÄÏß³ÌÍË³öÑ­»·
-	for_each(workers.begin(), workers.end(), std::mem_fn(&std::thread::join)); //µÈ´ı
+	cond_.notify_all();//é€šçŸ¥æ‰€æœ‰çš„çº¿ç¨‹é€€å‡ºå¾ªç¯
+	for_each(workers.begin(), workers.end(), std::mem_fn(&std::thread::join)); //ç­‰å¾…
 }
 
-//Ô­À´µÄº¯ÊıÊÇÓÃ·µ»ØÖµÎ²ĞòÀ´»ñÈ¡ÀàĞÍ ÔÚC++14Ö®ºóÖ§³Ödecltype(auto)½øĞĞÀàĞÍµÄÍÆµ¼£¨²»ÊìÏ¤decltypeÍÆµ¼¹æÔò¿ÉÒÔ¿´¿´£©
+//åŸæ¥çš„å‡½æ•°æ˜¯ç”¨è¿”å›å€¼å°¾åºæ¥è·å–ç±»å‹ åœ¨C++14ä¹‹åæ”¯æŒdecltype(auto)è¿›è¡Œç±»å‹çš„æ¨å¯¼ï¼ˆä¸ç†Ÿæ‚‰decltypeæ¨å¯¼è§„åˆ™å¯ä»¥çœ‹çœ‹Effective Modern C++ï¼‰
 template<class F, typename ...Args>
 decltype(auto) ThreadPool::Enqueue(F&& f, Args && ...args)
 {
-	using return_type = typename std::result_of_t<F(Args...)>; //»ñÈ¡·µ»ØÖµÀàĞÍ
+	using return_type = typename std::result_of_t<F(Args...)>; //è·å–è¿”å›å€¼ç±»å‹
 
 	auto task = std::make_shared< std::packaged_task<return_type()> >(
-		std::bind(std::forward<F>(f), std::forward<Args>(args)...) //Í¨¹ıbindºÍÍêÃÀ×ª·¢½«º¯ÊıºÍ²ÎÊı°ó¶¨
+		std::bind(std::forward<F>(f), std::forward<Args>(args)...) //é€šè¿‡bindå’Œå®Œç¾è½¬å‘å°†å‡½æ•°å’Œå‚æ•°ç»‘å®š
 		);
 
 	std::future<return_type> res = task->get_future();
 	
 	{
-		//ÁÙ½çÇø¿ªÊ¼ ËøÈÎÎñ¶ÓÁĞ
+		//ä¸´ç•ŒåŒºå¼€å§‹ é”ä»»åŠ¡é˜Ÿåˆ—
 		std::unique_lock<std::mutex> lock(mutex_);
 		
-		//Èç¹ûÒÑ¾­½«Ïß³Ì³ØÎö¹¹,¾Í²»ÔÊĞíÔÙÈë¶ÓÁĞ
+		//å¦‚æœå·²ç»å°†çº¿ç¨‹æ± ææ„,å°±ä¸å…è®¸å†å…¥é˜Ÿåˆ—
 		if (stop)
 			throw std::runtime_error("enqueue on stopped ThreadPool");
 
 		tasks.emplace([task]() { (*task)(); });
 	}
-	cond_.notify_one(); //Í¨ÖªÈÎÒâÒ»¸öÏß³Ì½ÓÊÕÈÎÎñ
+	cond_.notify_one(); //é€šçŸ¥ä»»æ„ä¸€ä¸ªçº¿ç¨‹æ¥æ”¶ä»»åŠ¡
 	return res;
 }
 
