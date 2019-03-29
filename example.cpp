@@ -4,26 +4,28 @@
 
 #include "ThreadPool.h"
 
-int main()
+int calc(int x)
 {
-    
-    ThreadPool pool(4);
-    std::vector< std::future<int> > results;
-
-    for(int i = 0; i < 8; ++i) {
-        results.emplace_back(
-            pool.enqueue([i] {
-                std::cout << "hello " << i << std::endl;
-                std::this_thread::sleep_for(std::chrono::seconds(1));
-                std::cout << "world " << i << std::endl;
-                return i*i;
-            })
-        );
-    }
-
-    for(auto && result: results)
-        std::cout << result.get() << ' ';
-    std::cout << std::endl;
-    
-    return 0;
+	if (x <= 2)
+		return 1;
+	return calc(x - 1) + calc(x - 2);
 }
+
+
+int main(int argc, char* argv[]) {
+	ThreadPool p(3);
+	auto res = p.Enqueue([ch = 'A']{
+		for (int i = 0; i < 10; i++)
+		{
+			cout << ch << endl;
+		}
+	return ch;
+	});
+	cout << "main :" << res.get() << endl;
+	p.Enqueue(print, 'B');
+	p.Enqueue(print, 'C');
+	auto t = p.Enqueue(calc, 10);
+	cout << "calc : " << t.get() << endl;
+	return 0;
+}
+
